@@ -4,26 +4,26 @@
 
 #실습 4-1
 CREATE TABLE `Member` (
-			`uid`		VARCHAR(10) IS NOT NULL,
-			`name`	VARCHAR(10) IS NOT NULL,
-			`hp`		CHAR(13) IS NOT NULL,
-			`pos`		VARCHAR(10) IS NOT NULL,
+			`uid`		VARCHAR(10) NOT NULL,
+			`name`	VARCHAR(10) NOT NULL,
+			`hp`		CHAR(13) NOT NULL,
+			`pos`		VARCHAR(10) NOT NULL,
 			`dep`		INT,
-			`rdate`	DATETIME IS NOT NULL
+			`rdate`	DATETIME NOT NULL
 			);
 
 CREATE TABLE `Department` (
-			`depNo`		INT IS NOT NULL,
-			`name`		VARCHAR(10) IS NOT NULL,
-			`tel`			CHAR(12) IS NOT NULL
+			`depNo`		INT NOT NULL,
+			`name`		VARCHAR(10) NOT NULL,
+			`tel`			CHAR(12) NOT NULL
 			);
 
 CREATE TABLE `Sales` (
 			`seq`		INT AUTO_INCREMENT PRIMARY KEY,		
-			`uid`		VARCHAR(10) IS NOT NULL,
-			`year`	YEAR IS NOT NULL,
-			`month`	INT IS NOT NULL,
-			`sale`	INT IS NOT NULL
+			`uid`		VARCHAR(10) NOT NULL,
+			`year`	YEAR NOT NULL,
+			`month`	INT NOT NULL,
+			`sale`	INT NOT NULL
 			);			
 			
 			
@@ -83,3 +83,267 @@ INSERT INTO `Sales` (`uid`, `year`, `month`, `sale`) VALUES ('a103', '2020', '2'
 INSERT INTO `Sales` (`uid`, `year`, `month`, `sale`) VALUES ('a104', '2020', '2', 84000);
 INSERT INTO `Sales` (`uid`, `year`, `month`, `sale`) VALUES ('a105', '2020', '2', 180000);
 INSERT INTO `Sales` (`uid`, `year`, `month`, `sale`) VALUES ('a108', '2020', '2', 76000);
+
+# 실습 4-3
+SELECT * FROM `Member` WHERE `name` = '김유신';
+SELECT * FROM `Member` WHERE `pos` = '차장' AND `dep` = '101';
+SELECT * FROM `Member` WHERE `pos` = '차장' OR `dep` = '101';
+SELECT * FROM `Member` WHERE `name` != '김춘추';
+SELECT * FROM `Member` WHERE `name` <> '김춘추';
+SELECT * FROM `Member` WHERE `pos` = '사원' OR `pos` = '대리';
+SELECT * FROM `Member` WHERE `pos` IN('사원', '대리');
+SELECT * FROM `Member` WHERE `pos` IN(101, 102, 103);
+SELECT * FROM `Member` WHERE `name` LIKE '%신'; 
+SELECT * FROM `` WHERE `` LIKE '';
+SELECT * FROM `` WHERE `` LIKE '';
+SELECT * FROM `` WHERE `` LIKE '';
+SELECT * FROM `Member` WHERE `name` LIKE '정_'; 
+
+# 실습 4-4
+SELECT * FROM `Sales` ORDER BY `sale`;
+SELECT * FROM `Sales` ORDER BY `sale` ASC;
+SELECT * FROM `Sales` ORDER BY `sale` DESC;
+
+SELECT * FROM `Sales` 
+WHERE `sale` > 50000
+ORDER BY `sale` DESC;
+
+SELECT * FROM `Sales`
+WHERE `sale` > 50000
+ORDER BY
+		`year` ASC,
+		`month` ASC,
+		`sale` DESC;
+
+# 실습 4-5
+SELECT * FROM `Sales` LIMIT 3;
+SELECT * FROM `Sales` LIMIT 0, 3;
+SELECT * FROM `Sales` LIMIT 1, 2;
+SELECT * FROM `Sales` LIMIT 5, 3;
+
+SELECT * 
+FROM 
+	`Sales`
+WHERE 
+	`sale` > 50000
+ORDER BY 
+	`year` DESC,
+	`month` ASC,
+	`sale` DESC
+LIMIT
+	5;
+	
+# 실습 4-6
+SELECT SUM(`sale`) AS `합계` FROM `Sales`;
+SELECT AVG(`sale`) AS `평균` FROM `Sales`;	
+SELECT COUNT(*) AS `갯수` FROM `Sales`;
+SELECT SUBSTRING(`hp`, 10, 4) AS `전화번호 끝자리`	
+	FROM `Member`;
+	
+INSERT INTO `Member` 
+	VALUES('b101', '을지문덕', '010-5555-1234', '사장', 107, NOW());	
+
+# 실습 4-7
+SELECT 
+	SUM(`sale`) AS `총합` 
+FROM 
+	`Sales`
+WHERE
+	`year` = 2018 AND `month` = 1;	
+
+# 실습 4-8
+SELECT 
+	SUM(`sale`) AS `총합`,
+	AVG(`sale`) AS `평균`
+FROM 
+	`Sales`
+WHERE 
+	`year` = 2019 
+	AND 
+	`month` = 2	
+	AND 
+	`sale` >= 50000;
+	
+# 실습 4-10
+SELECT VERSION();
+SELECT `uid` FROM `Sales` GROUP BY `uid`;	
+SELECT `year` FROM `Sales` GROUP BY `year`;
+SELECT `uid`, `year` FROM `Sales` GROUP BY `uid`, `year`;
+	
+SELECT
+	`uid`, 
+	`year`, 
+	SUM(`sale`) AS `합계`
+FROM 
+	`Sales`
+GROUP BY 
+	`uid`, `year`;	
+
+
+SELECT 
+	`uid`,
+	`year`,
+	SUM(`sale`) AS `합계`
+FROM 
+	`Sales`
+WHERE
+	`sale` >= 50000		
+GROUP BY
+	`uid`, `year`
+ORDER BY
+	`합계` DESC;		
+	
+# 실습 4-11
+SELECT 
+	`uid`,
+	`year`,
+	SUM(`sale`) AS `합계`
+FROM 
+	`Sales`
+WHERE
+	`sale` >= 50000		
+GROUP BY
+	`uid`, `year`
+HAVING
+	`합계` >= 200000	
+ORDER BY
+	`합계` DESC;
+
+# 실습 4-12
+CREATE TABLE `Sales2` LIKE `Sales`;
+INSERT INTO `Sales2` SELECT * FROM `Sales`;
+UPDATE `Sales2` SET `year` = `year` + 3;	
+
+SELECT * FROM `Sales`
+UNION
+SELECT * FROM `Sales2`;
+
+(SELECT * FROM `Sales`)
+UNION
+(SELECT * FROM `Sales2`);	
+
+SELECT `uid`, `year`, `sale` FROM `Sales`
+UNION
+SELECT `uid`, `year`, `sale` FROM `Sales2`;	
+
+SELECT `uid`, `year`, SUM(sale) AS `합계`
+FROM `Sales`
+GROUP BY `uid`, `year`
+UNION
+SELECT `uid`, `year`, SUM(sale) AS `합계` 
+FROM `Sales2`
+GROUP BY `uid`, `year`
+ORDER BY `year` ASC, `합계` DESC;
+
+# 실습 4-13	
+SELECT * FROM `Sales` 
+INNER JOIN `Member`
+ON `Sales`.uid = `Member`.uid;
+
+SELECT * FROM `Member`
+INNER JOIN `Department`
+ON `Member`.dep = `Department`.depNo;
+
+SELECT * FROM `Sales` AS a
+JOIN `Member` AS b
+ON a.uid = b.uid;
+
+SELECT * FROM `Member` AS a
+JOIN `Department` AS b
+ON a.dep = b.depNo;
+
+SELECT * FROM `Sales` AS a, `Member` AS b
+WHERE a.uid = b.uid;
+
+SELECT * FROM `Member` AS a, `Department` AS b WHERE a.dep = b.depNo;
+
+SELECT
+	a.`seq`, 
+	a.`uid`, 
+	a.`sale`, 
+	b.`name`, 
+	b.`pos`
+FROM `Sales` AS a
+JOIN `Member` AS b
+ON a.uid = b.uid;
+
+SELECT
+	a.`seq`, 
+	a.`uid`, 
+	a.`sale`, 
+	b.`name`, 
+	b.`pos`
+FROM `Sales` AS a
+JOIN `Member` AS b
+USING(`uid`);
+
+SELECT
+	a.`seq`, 
+	a.`uid`, 
+	a.`sale`, 
+	b.`name`, 
+	b.`pos`
+FROM `Sales` AS a
+JOIN `Member` AS b ON a.uid = b.uid
+WHERE `sale` >= 100000;
+  
+SELECT * 
+FROM `Sales` 		AS a
+JOIN `Member` 		AS b ON a.uid = b.uid
+JOIN `Department` AS c ON b.dep = c. depNo; 
+  
+# 실습 4-14
+INSERT INTO `Sales` (`uid`, `year`, `month`, `sale`) 
+	VALUES ('p101', 2018, 1, 35000);
+
+SELECT * FROM `Sales` AS a
+LEFT JOIN `Member` AS b
+ON a.uid = b.uid;
+
+
+SELECT * FROM `Sales` AS a
+RIGHT JOIN `Member` AS b
+ON a.uid = b.uid;
+
+# 실습 4-15
+
+SELECT
+	a.`uid`,
+	a.`name`,
+	a.`pos`,
+	b.`name`	
+FROM `Member` AS a
+JOIN `Department` AS b
+ON a.dep = b.depNo; 
+
+# 실습 4-16
+SELECT 
+SUM(`Sale`) AS `매출합`
+FROM `Sales` AS a
+JOIN `Member` AS b
+ON a.uid = b.uid
+WHERE `name` = "김유신" AND `year` = 2019
+GROUP BY `year`;
+
+# 실습 4-17
+SELECT
+	b.`name` AS `직원명`,
+	c.`name` AS `부서명`,
+	b.`pos` AS `직급`,
+	a.`year` AS `년도`,
+	SUM(`Sale`) AS `매출합`
+FROM `Sales` 		AS a
+JOIN `Member` 		AS b ON a.uid = b.uid
+JOIN `Department` AS c ON b.dep = c.depNo
+WHERE `sale` >= 50000 AND `year` = 2019 
+GROUP BY a.`uid`
+HAVING ~ `매출합` >= 100000
+ORDER BY `매출합` DESC;
+
+
+
+
+
+
+
+
