@@ -38,7 +38,7 @@ INSERT INTO `Categories` VALUES (19, '도서');
 
 #Points
 INSERT INTO `Points` (`userId`, `point`, `pointDesc`, `pointDate`) VALUES ('user1', 1000, '회원가입 1000 적립', '2022-01-10 10:50:12');
-INSERT INTO `Points` (`userId`, `point`, `pointDesc`, `pointDate`) VALUES ('user2', 6000, '상품구매 5% 적립', '2022-01-10 10:50:12');
+INSERT INTO `Points` (`userId`, `point`, `pointDesc`, `pointDate`) VALUES ('user1', 6000, '상품구매 5% 적립', '2022-01-10 10:50:12');
 INSERT INTO `Points` (`userId`, `point`, `pointDesc`, `pointDate`) VALUES ('user3', 2835, '상품구매 5% 적립', '2022-01-10 10:50:12');
 INSERT INTO `Points` (`userId`, `point`, `pointDesc`, `pointDate`) VALUES ('user7', 3610, '상품구매 5% 적립', '2022-01-10 10:50:12');
 INSERT INTO `Points` (`userId`, `point`, `pointDesc`, `pointDate`) VALUES ('user5', 3000, '이벤트 응모 3000 적립', '2022-01-10 10:50:12');
@@ -102,7 +102,7 @@ INSERT INTO `OrderItems` (`orderNo`, `prodNo`, `itemPrice`, `itemDiscount`, `ite
 INSERT INTO `OrderItems` (`orderNo`, `prodNo`, `itemPrice`, `itemDiscount`, `itemCount`) VALUES (22010510031, 170115, 900000, 12, 1);
 INSERT INTO `OrderItems` (`orderNo`, `prodNo`, `itemPrice`, `itemDiscount`, `itemCount`) VALUES (22010710110, 120103, 21000, 10, 5);
 
-# 문제1.
+# 문제1. 모든 장바구니 내역에서 고객명, 상품명, 상품수량을 조회하시오. 단 상품수량 2건이상만 조회 할 것
 SELECT `userName`, `prodName`, `cartProdCount` FROM `Carts` AS a 
 JOIN `Users` AS b
 ON a.userId = b.userId
@@ -110,27 +110,35 @@ JOIN `Products` AS c
 ON a.prodNo = c.prodNo
 WHERE `cartProdCount` >= 2;
 
-# 문제2.
+# 문제2. 모든 상품내역에서 상품번호, 상품카테고리명, 상품명, 상품가격, 판매자이름, 판매자 연락처를 조회하시오.
 SELECT `prodNo`, `cateName`, `prodName`, `prodPrice`, `sellerManager`, `sellerPhone` FROM `Products` AS a
 JOIN `Categories` AS b
 ON a.cateNo = b.cateNo
 JOIN `Sellers` AS c
 ON a.sellerNo = c.sellerNo;
 
-# 문제3.
-SELECT `userId`, `userName`, `userHp`, `userPoint`, SUM(point) FROM `Users` AS a
+# 문제3. 모든 고객의 아이디, 이름, 휴대폰, 현재포인트, 적립포인트 총합을 조회하시오. 단 적립포인트 내역이 없으면 0으로 출력
+SELECT a.`userId`, `userName`, `userHp`, `userPoint`, IF(SUM(`point`) IS NULL, 0, SUM(`point`)) '적립포인트 총합' #IF문
+FROM `Users` AS a
 LEFT JOIN `Points` AS b
-ON a.userId = b.userId;
+ON a.userId = b.userId
+GROUP BY `userId`;
 
-# 문제4.
-SELECT `orderNo`, `userId`, `userName`, `orderTotalprice`, `orderDate` FROM `Orders` AS a
+# 문제4. 모든 주문의 주문번호, 주문자 아이디, 고객명, 주문가격, 주문일자를 조회하시오.
+SELECT `orderNo`, a.`userId`, `userName`, `orderTotalprice`, `orderDate` FROM `Orders` AS a
 JOIN `Users` AS b
 ON a.userId = b.userId
 WHERE `orderTotalPrice` >= 100000
 ORDER BY `OrderTotalPrice` DESC, `UserName`;
 
-# 문제5.
-SELECT a.`orderNo`, a.`userId`, `userName`, GROUP_CONCAT(`prodName` SEPARATOR ','), `orderDate` FROM `Orders` AS a
+# 문제5. 모든 주문의 주문번호, 주문자 아이디, 고객명, 상품명, 주문일자를 조회하시오. 주문번호는 중복없이 상품명은 구분자 ,로 나열할것
+SELECT 
+	a.`orderNo`, 
+	ANY_VALUE(a.`userId`), #ANY_VALUE는 GROUP BY한 칼럼외에는 그냥 SELECT 안되므로 써줘야함. 문제3번은 왜 되는지 모르겠음.
+	ANY_VALUE(`userName`), 
+	GROUP_CONCAT(`prodName` SEPARATOR ',') '상품명', 
+	ANY_VALUE(`orderDate`) 
+FROM `Orders` AS a
 JOIN `Users` AS b
 ON a.userId = b.userId
 JOIN `OrderItems` AS c
@@ -139,45 +147,56 @@ JOIN `Products` AS d
 ON c.prodNo = d.prodNo
 GROUP BY `orderNo`; #DISTINCT 도 가능
 
-# 문제6. ***
-SELECT `prodNo`, `prodName`, `prodPrice`, `prodDiscount`, `prodPrice` * (1 - `prodDiscount` / 100) `할인가격` FROM `Products`;
+# 문제6. 모든 상품의 상품번호, 상품명, 상품가격, 할인율, 할인된 가격을 조회하시오. ***
+SELECT `prodNo`, 
+`prodName`, 
+`prodPrice`, 
+`prodDiscount`, 
+FLOOR(`prodPrice` * (1 - `prodDiscount` / 100)) `할인가격` #FLOOR은 버림(소수점이하)
+FROM `Products`;
 
-# 문제7.
+# 문제7. 고소영 판매자가 판매하는 모든 상품의 상품번호, 상품명, 상품가격, 재고수량, 판매자이름을 조회하시오.
 SELECT `prodNo`, `prodName`, `prodPrice`, `prodStock`, `sellerManager` FROM `Products` AS a
 JOIN `Sellers` AS b
 ON a.sellerNo = b.sellerNo
 WHERE `SellerManager` = '고소영';
 
-# 문제8.
-SELECT `sellerNo`, `sellerBizName`, `sellerManager`, `sellerPhone` FROM `Sellers` AS a
+# 문제8. 아직 상품을 판매하지 않은 판매자의 판매자번호, 판매자상호, 판매자 이름, 판매자 연락처를 조회하시오.
+SELECT a.`sellerNo`, `sellerBizName`, `sellerManager`, `sellerPhone` FROM `Sellers` AS a
 LEFT JOIN `Products` AS b
 ON a.sellerNo = b.sellerNo
 WHERE `prodNo` IS NULL;
 
-# 문제9. ***
-SELECT `orderNo`, `itemPrice` * `itemCount` * (1 - `itemDiscount` / 100) `최종총합` FROM `OrderItems`
-WHERE `itemPrice` * `itemCount` * (1 - `itemDiscount` / 100) >= 100000
+# 문제9.  모든 주문상세내역 중 개별 상품 가격과 개수 그리고 할인율이 적용된 최종 총합을 구하고
+#       최종 총합이 10만원이상 그리고 큰 금액 순으로 `주문번호`, `최종총합`을 조회하시오.  ***
+SELECT 
+	`orderNo`, 
+	SUM(FLOOR(`itemPrice` * `itemCount` * (1 - `itemDiscount` / 100))) `최종총합` 
+FROM `OrderItems`
+GROUP BY `orderNo` #WHERE 절은 지정한 칼럼명으로 조건절 만들 수 없음! 따라서 HAVING 절 이용
+HAVING `최종총합` >= 100000 
+ORDER BY `최종총합` DESC;
+
+SELECT
+	`orderNo` AS `주문번호`,
+	SUM(`totalPrice`) AS `최종총합`
+FROM
+	(
+	SELECT
+		*,
+		FLOOR(`itemPrice` * (1 - `itemDiscount` / 100) * `itemCount`) AS `totalPrice` #원래 테이블에 totalPrice를 추가한 가상테이블을 만들어서 선택
+	FROM `OrderItems`
+	) AS a # AS a 없으면 FROM () 상태이므로 테이블처럼 AS a 추가해주는것.
+GROUP BY `orderNo`
+HAVING `최종총합` >= 100000
 ORDER BY `최종총합` DESC;
 
 
 
 
-SELECT `orderNo`, SUM(`itemCount`) * `itemPrice` * (1 - `itemDiscount` / 100) `최종총합` FROM `OrderItems`
-WHERE SUM(`itemCount`) * `itemPrice` * (1 - `itemDiscount` / 100) >= 100000
-GROUP BY `prodNo`
-ORDER BY `최종총합` DESC;
-
-# 문제10.
+# 문제10. 장보고 고객이 주문했던 모든 상품명을 `고객명`, `상품명`으로 조회하시오. 
+#        단 상품명은 중복 안됨, 상품명은 구분자 , 로 나열
 SELECT `userName`, GROUP_CONCAT(`prodName` SEPARATOR ',') FROM `Products` AS a
-JOIN `OrderItems` AS b
-ON a.prodNo = b.prodNo
-JOIN `Orders` AS c
-ON b.orderNo = c.orderNo
-JOIN `Users` AS d
-ON c.userId = d.userId
-WHERE `userName` = '장보고';
-
-SELECT * FROM `Products` AS a
 JOIN `OrderItems` AS b
 ON a.prodNo = b.prodNo
 JOIN `Orders` AS c
