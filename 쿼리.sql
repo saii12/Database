@@ -1,0 +1,1 @@
+CREATE TABLE `User6` LIKE `User3`;

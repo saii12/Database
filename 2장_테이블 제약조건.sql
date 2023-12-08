@@ -77,7 +77,7 @@ INSERT INTO `User4`(`gender`, `addr`) VALUES(1, '부산시');
 CREATE TABLE `User5` (
 			`name`		VARCHAR(10) NOT NULL,
 			`gender`		TINYINT,
-			`age`			INT DEFAULT 1,
+			`age`			TINYINT DEFAULT 1,
 			`addr`		VARCHAR(10)
 			);
 
